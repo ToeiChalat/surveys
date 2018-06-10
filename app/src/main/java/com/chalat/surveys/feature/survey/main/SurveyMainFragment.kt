@@ -3,16 +3,12 @@ package com.chalat.surveys.feature.survey.main
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.chalat.surveys.R
 import com.chalat.surveys.feature.survey.data.Survey
-import com.chalat.surveys.feature.survey.data.SurveyRemoteDataSource
-import com.chalat.surveys.feature.survey.data.SurveyRepository
 import com.chalat.surveys.feature.survey.detail.SurveyDetailActivity
-import com.chalat.surveys.network.NetworkProvider
 import com.chalat.surveys.utils.setImage
 import kotlinx.android.synthetic.main.fragment_survey_main.*
 
