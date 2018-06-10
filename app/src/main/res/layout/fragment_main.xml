@@ -52,18 +52,31 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.chalat.surveys.view.VerticalViewPager
-            android:id="@+id/mainSurveyViewPager"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+        <ProgressBar
+            android:id="@+id/mainProgressBar"
+            android:layout_width="108dp"
+            android:layout_height="108dp"
+            android:layout_gravity="center"/>
 
-        <com.viewpagerindicator.CirclePageIndicator
-            android:id="@+id/mainSurveyIndicator"
-            android:layout_width="wrap_content"
-            android:padding="8dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="end"
-            android:orientation="vertical" />
+        <FrameLayout
+            android:id="@+id/mainContentLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.chalat.surveys.view.VerticalViewPager
+                android:id="@+id/mainSurveyViewPager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <com.viewpagerindicator.CirclePageIndicator
+                android:id="@+id/mainSurveyIndicator"
+                android:layout_width="wrap_content"
+                android:padding="8dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:orientation="vertical" />
+
+        </FrameLayout>
 
     </FrameLayout>
 

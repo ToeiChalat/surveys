@@ -1,6 +1,7 @@
 package com.chalat.surveys.feature.survey.data
 
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 
 /**
@@ -10,8 +11,8 @@ import kotlinx.android.parcel.Parcelize
  */
 @Parcelize
 data class Survey(
-        val surveyId: String,
-        val surveyName: String,
-        val surveyDescription: String,
-        val surveyImageCoverUrl: String
+        @SerializedName("id")               val surveyId: String,
+        @SerializedName("title")            val surveyName: String,
+        @SerializedName("description")      val surveyDescription: String,
+        @SerializedName("cover_image_url")  val surveyImageCoverUrl: String
 ) : Parcelable
