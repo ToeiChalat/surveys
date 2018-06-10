@@ -11,11 +11,17 @@ import com.chalat.surveys.feature.survey.main.SurveyMainFragment
  * Created by Chalat Chansima on 6/10/18.
  *
  */
-class  MainViewPagerAdapter(fm: FragmentManager?) : FragmentStatePagerAdapter(fm) {
+class MainViewPagerAdapter(fm: FragmentManager?) : FragmentStatePagerAdapter(fm) {
+
+    interface LastPageListener {
+        fun onLastPage()
+    }
 
     private var dataList = ArrayList<Survey>()
+    private var lastPageListener: LastPageListener? = null
 
     override fun getItem(position: Int): Fragment {
+        if (position == dataList.size - 1) lastPageListener?.onLastPage()
         return SurveyMainFragment.newInstance(dataList[position])
     }
 
@@ -26,6 +32,15 @@ class  MainViewPagerAdapter(fm: FragmentManager?) : FragmentStatePagerAdapter(fm
     fun replaceData(surveyList: List<Survey>) {
         dataList = ArrayList(surveyList)
         notifyDataSetChanged()
+    }
+
+    fun appendData(surveyList: List<Survey>) {
+        dataList.addAll(surveyList)
+        notifyDataSetChanged()
+    }
+
+    fun setOnLastPageListener(lastPageListener: LastPageListener) {
+        this.lastPageListener = lastPageListener
     }
 
 }
