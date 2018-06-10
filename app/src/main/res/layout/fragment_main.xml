@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".MainFragment">
+    android:orientation="vertical"
+    tools:context=".feature.app.MainFragment">
 
     <android.support.v7.widget.Toolbar
         android:layout_width="match_parent"
-        android:background="@color/colorPrimary"
         android:layout_height="?actionBarSize"
+        android:background="@color/colorPrimary"
         app:contentInsetStart="0dp">
 
         <LinearLayout
@@ -26,14 +27,14 @@
                 android:src="@drawable/ic_refresh_white_32dp" />
 
             <TextView
-                android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:gravity="center"
+                android:text="SURVEYS"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:text="SURVEYS" />
+                android:textStyle="bold" />
 
             <ImageButton
                 android:id="@+id/mainMenuAction"
@@ -47,4 +48,23 @@
 
     </android.support.v7.widget.Toolbar>
 
-</FrameLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.chalat.surveys.view.VerticalViewPager
+            android:id="@+id/mainSurveyViewPager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.viewpagerindicator.CirclePageIndicator
+            android:id="@+id/mainSurveyIndicator"
+            android:layout_width="wrap_content"
+            android:padding="8dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:orientation="vertical" />
+
+    </FrameLayout>
+
+</LinearLayout>

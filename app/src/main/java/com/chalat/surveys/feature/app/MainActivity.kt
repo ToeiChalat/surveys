@@ -1,7 +1,8 @@
-package com.chalat.surveys
+package com.chalat.surveys.feature.app
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import com.chalat.surveys.R
 
 class MainActivity : AppCompatActivity() {
 
