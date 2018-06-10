@@ -10,10 +10,14 @@ import io.reactivex.Observable
  */
 class SurveyRemoteDataSource(
         private val accessToken: String,
-        private val service: SurveyService): SurveyDataSource {
+        private val service: SurveyService) : SurveyDataSource {
 
     override fun getSurveys(page: Int?): Observable<List<Survey>> {
-        return service.getSurveys(accessToken, page)
+        return service.getSurveys(accessToken, page, PAGE_LIMIT)
+    }
+
+    companion object {
+        private const val PAGE_LIMIT = 5
     }
 
 }

@@ -22,6 +22,8 @@ import kotlinx.android.synthetic.main.fragment_main.*
 class MainFragment : Fragment() {
 
     private lateinit var adapter: MainViewPagerAdapter
+    private var currentPage = 1
+    private var isAllDataLoaded = false
 
     private val surveyRepository = SurveyRepository(
             SurveyRemoteDataSource(
@@ -35,6 +37,14 @@ class MainFragment : Fragment() {
         arguments?.let {
         }
         adapter = MainViewPagerAdapter(childFragmentManager)
+        adapter.setOnLastPageListener(object : MainViewPagerAdapter.LastPageListener {
+            override fun onLastPage() {
+                if (!isAllDataLoaded) {
+                    currentPage++
+                    loadData(currentPage)
+                }
+            }
+        })
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -45,7 +55,7 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        mainRefreshAction.setOnClickListener { loadData() }
+        mainRefreshAction.setOnClickListener { loadData(REFRESH_DATA) }
         mainMenuAction.setOnClickListener { showToast("Menu") }
         mainSurveyViewPager.apply {
             adapter = this@MainFragment.adapter
@@ -55,41 +65,50 @@ class MainFragment : Fragment() {
             radius = circleRadius
             setViewPager(mainSurveyViewPager)
         }
+        loadData()
     }
 
-    override fun onResume() {
-        super.onResume()
-//        mockData()
-        loadData(true)
-    }
-
-    private fun loadData(isFirstLoad: Boolean = false) {
-        if (isFirstLoad) {
+    private fun loadData(page: Int = 1) {
+        if (page == REFRESH_DATA) {
             mainProgressBar.visibility = VISIBLE
             mainContentLayout.visibility = GONE
+            currentPage = 1
+            isAllDataLoaded = false
+            mainSurveyViewPager.currentItem = 0
+            surveyRepository.getSurveys(currentPage)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({ updateView(it, page) }, { it.printStackTrace() })
+        } else {
+            if (page != 1) showToast("Loading more survey...")
+            surveyRepository.getSurveys(page)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({ updateView(it, page) }, { it.printStackTrace() })
         }
-        surveyRepository.getSurveys()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ updateView(it, isFirstLoad) }, { it.printStackTrace() })
     }
 
-    private fun updateView(it: List<Survey>, isFirstLoad: Boolean) {
+    private fun updateView(surveyList: List<Survey>, page: Int) {
         mainProgressBar.visibility = GONE
         mainContentLayout.visibility = VISIBLE
-        adapter.replaceData(it)
-        if (!isFirstLoad) {
-            Toast.makeText(context, "Refreshed Data", Toast.LENGTH_SHORT).show()
+        if (surveyList.isNotEmpty()) {
+            when (page) {
+                REFRESH_DATA -> {
+                    adapter.replaceData(surveyList)
+                }
+                1 -> {
+                    adapter.replaceData(surveyList)
+                }
+                else -> {
+                    adapter.appendData(surveyList)
+                    showToast("${surveyList.size} surveys added")
+                }
+            }
+        } else {
+            showToast("all survey loaded")
+            isAllDataLoaded = true
         }
-    }
-
-    private fun mockData() {
-        adapter.replaceData(listOf(
-                Survey("1", "Survey 1", "survey Desc 1", "https://images.unsplash.com/photo-1494367067577-502b2c602fcc?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4a264890b0119b7be54c642939f477b3&auto=format&fit=crop&w=3089&q=80"),
-                Survey("2", "Survey 2", "survey Desc 2", "https://images.unsplash.com/photo-1494367067577-502b2c602fcc?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4a264890b0119b7be54c642939f477b3&auto=format&fit=crop&w=3089&q=80"),
-                Survey("3", "Survey 3", "survey Desc 3", "https://images.unsplash.com/photo-1494367067577-502b2c602fcc?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4a264890b0119b7be54c642939f477b3&auto=format&fit=crop&w=3089&q=80"),
-                Survey("4", "Survey 4", "survey Desc 4", "https://images.unsplash.com/photo-1494367067577-502b2c602fcc?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4a264890b0119b7be54c642939f477b3&auto=format&fit=crop&w=3089&q=80")
-        ))
+        mainSurveyIndicator.invalidate()
     }
 
     private fun showToast(message: String) {
@@ -97,6 +116,9 @@ class MainFragment : Fragment() {
     }
 
     companion object {
+
+        private const val REFRESH_DATA = 0
+
         @JvmStatic
         fun newInstance() =
                 MainFragment().apply {
