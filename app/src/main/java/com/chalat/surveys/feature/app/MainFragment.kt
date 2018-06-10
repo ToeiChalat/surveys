@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.chalat.surveys.BuildConfig
 import com.chalat.surveys.R
+import com.chalat.surveys.base.BasePresenter
 import com.chalat.surveys.feature.survey.data.Survey
 import com.chalat.surveys.feature.survey.data.SurveyRemoteDataSource
 import com.chalat.surveys.feature.survey.data.SurveyRepository
@@ -19,30 +20,18 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_main.*
 
 
-class MainFragment : Fragment() {
+class MainFragment : Fragment(), MainContract.View {
+
+    private lateinit var presenter: MainContract.Presenter
 
     private lateinit var adapter: MainViewPagerAdapter
-    private var currentPage = 1
-    private var isAllDataLoaded = false
-
-    private val surveyRepository = SurveyRepository(
-            SurveyRemoteDataSource(
-                    BuildConfig.ACCESS_TOKEN,
-                    NetworkProvider.provideSurveyService()
-            )
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-        }
         adapter = MainViewPagerAdapter(childFragmentManager)
         adapter.setOnLastPageListener(object : MainViewPagerAdapter.LastPageListener {
             override fun onLastPage() {
-                if (!isAllDataLoaded) {
-                    currentPage++
-                    loadData(currentPage)
-                }
+                presenter.loadMore()
             }
         })
     }
@@ -55,7 +44,7 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        mainRefreshAction.setOnClickListener { loadData(REFRESH_DATA) }
+        mainRefreshAction.setOnClickListener { presenter.refresh() }
         mainMenuAction.setOnClickListener { showToast("Menu") }
         mainSurveyViewPager.apply {
             adapter = this@MainFragment.adapter
@@ -65,60 +54,44 @@ class MainFragment : Fragment() {
             radius = circleRadius
             setViewPager(mainSurveyViewPager)
         }
-        loadData()
     }
 
-    private fun loadData(page: Int = 1) {
-        if (page == REFRESH_DATA) {
-            mainProgressBar.visibility = VISIBLE
-            mainContentLayout.visibility = GONE
-            currentPage = 1
-            isAllDataLoaded = false
-            mainSurveyViewPager.currentItem = 0
-            surveyRepository.getSurveys(currentPage)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe({ updateView(it, page) }, { it.printStackTrace() })
-        } else {
-            if (page != 1) showToast("Loading more survey...")
-            surveyRepository.getSurveys(page)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe({ updateView(it, page) }, { it.printStackTrace() })
-        }
+    override fun onResume() {
+        super.onResume()
+        presenter.start()
     }
 
-    private fun updateView(surveyList: List<Survey>, page: Int) {
+    override fun refresh() {
+        mainProgressBar.visibility = View.VISIBLE
+        mainContentLayout.visibility = View.GONE
+        mainSurveyViewPager.currentItem = 0
+    }
+
+    override fun setPresenter(presenter: MainContract.Presenter) {
+        this.presenter = presenter
+    }
+
+    override fun isActive(): Boolean {
+        return isAdded
+    }
+
+    override fun updateView(surveyList: List<Survey>) {
         mainProgressBar.visibility = GONE
         mainContentLayout.visibility = VISIBLE
-        if (surveyList.isNotEmpty()) {
-            when (page) {
-                REFRESH_DATA -> {
-                    adapter.replaceData(surveyList)
-                }
-                1 -> {
-                    adapter.replaceData(surveyList)
-                }
-                else -> {
-                    adapter.appendData(surveyList)
-                    showToast("${surveyList.size} surveys added")
-                }
-            }
-        } else {
-            showToast("all survey loaded")
-            isAllDataLoaded = true
-        }
+        adapter.replaceData(surveyList)
         mainSurveyIndicator.invalidate()
     }
 
-    private fun showToast(message: String) {
+    override fun addMoreView(surveyList: List<Survey>) {
+        adapter.appendData(surveyList)
+        mainSurveyIndicator.invalidate()
+    }
+
+    override fun showToast(message: String) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
     companion object {
-
-        private const val REFRESH_DATA = 0
-
         @JvmStatic
         fun newInstance() =
                 MainFragment().apply {
