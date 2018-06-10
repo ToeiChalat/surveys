@@ -1,7 +1,7 @@
 package com.chalat.surveys.network
 
 import com.chalat.surveys.BuildConfig
-import okhttp3.OkHttpClient
+import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -16,6 +16,12 @@ import retrofit2.converter.gson.GsonConverterFactory
 object NetworkProvider {
 
     private var retrofit: Retrofit? = null
+    private var haveRefresh: Boolean = false
+
+    fun provideSurveyService(): SurveyService {
+        retrofit = retrofit ?: provideRetrofit()
+        return retrofit!!.create(SurveyService::class.java)
+    }
 
     private fun provideClient(): OkHttpClient {
         val logging = HttpLoggingInterceptor()
@@ -26,6 +32,7 @@ object NetworkProvider {
         }
         return OkHttpClient.Builder()
                 .addInterceptor(logging)
+                .authenticator(authenticator)
                 .build()
     }
 
@@ -38,9 +45,23 @@ object NetworkProvider {
                 .build()
     }
 
-    fun provideSurveyService(): SurveyService {
-        retrofit = retrofit ?: provideRetrofit()
-        return retrofit!!.create(SurveyService::class.java)
+    private val authenticator = Authenticator { _, response ->
+        if (haveRefresh) {
+            null
+        } else {
+            haveRefresh = true
+            val newToken = provideSurveyService().refreshToken(
+                    BuildConfig.USER_NAME,
+                    BuildConfig.PASSWORD
+            ).execute().body()
+            newToken?.let {
+                response.request().newBuilder()
+                        .url(response.request().url().newBuilder()
+                                .setQueryParameter("access_token", it.accessToken)
+                                .build())
+                        .build()
+            }
+        }
     }
 
 }
