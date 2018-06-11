@@ -13,8 +13,7 @@ import retrofit2.http.*
 interface SurveyService {
 
     @GET("surveys.json")
-    fun getSurveys(@Query("access_token") accessToken: String,
-                   @Query("page") page: Int? = null,
+    fun getSurveys(@Query("page") page: Int? = null,
                    @Query("per_page") limit: Int? = null): Observable<List<Survey>>
 
     @FormUrlEncoded

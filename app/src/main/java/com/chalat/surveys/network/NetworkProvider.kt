@@ -15,8 +15,10 @@ import retrofit2.converter.gson.GsonConverterFactory
  */
 object NetworkProvider {
 
+    private const val ACCESS_TOKEN = "access_token"
+
     private var retrofit: Retrofit? = null
-    private var haveRefresh: Boolean = false
+    private var haveRefreshToken = false
 
     fun provideSurveyService(): SurveyService {
         retrofit = retrofit ?: provideRetrofit()
@@ -26,12 +28,13 @@ object NetworkProvider {
     private fun provideClient(): OkHttpClient {
         val logging = HttpLoggingInterceptor()
         if (BuildConfig.DEBUG) {
-            logging.level = HttpLoggingInterceptor.Level.BASIC
+            logging.level = HttpLoggingInterceptor.Level.BODY
         } else {
             logging.level = HttpLoggingInterceptor.Level.NONE
         }
         return OkHttpClient.Builder()
                 .addInterceptor(logging)
+                .addInterceptor(tokenAuthenticator)
                 .authenticator(authenticator)
                 .build()
     }
@@ -45,19 +48,31 @@ object NetworkProvider {
                 .build()
     }
 
+    private val tokenAuthenticator: (Interceptor.Chain) -> Response = {
+        val newUrl = it.request().url().newBuilder()
+                .setQueryParameter(ACCESS_TOKEN, TokenManager.getToken())
+                .build()
+        val request = it.request().newBuilder()
+                .url(newUrl)
+                .build()
+        it.proceed(request)
+    }
+
     private val authenticator = Authenticator { _, response ->
-        if (haveRefresh) {
+        if (haveRefreshToken) {
+            haveRefreshToken = false
             null
         } else {
-            haveRefresh = true
+            haveRefreshToken = true
             val newToken = provideSurveyService().refreshToken(
                     BuildConfig.USER_NAME,
                     BuildConfig.PASSWORD
             ).execute().body()
             newToken?.let {
+                TokenManager.setToken(it.accessToken)
                 response.request().newBuilder()
                         .url(response.request().url().newBuilder()
-                                .setQueryParameter("access_token", it.accessToken)
+                                .setQueryParameter(ACCESS_TOKEN, it.accessToken)
                                 .build())
                         .build()
             }

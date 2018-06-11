@@ -8,12 +8,10 @@ import io.reactivex.Observable
  * Created by Chalat Chansima on 6/10/18.
  *
  */
-class SurveyRemoteDataSource(
-        private val accessToken: String,
-        private val service: SurveyService) : SurveyDataSource {
+class SurveyRemoteDataSource(private val service: SurveyService) : SurveyDataSource {
 
     override fun getSurveys(page: Int?): Observable<List<Survey>> {
-        return service.getSurveys(accessToken, page, PAGE_LIMIT)
+        return service.getSurveys(page, PAGE_LIMIT)
     }
 
     companion object {
