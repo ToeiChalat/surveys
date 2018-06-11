@@ -11,10 +11,7 @@ import com.chalat.surveys.network.NetworkProvider
 class MainActivity : AppCompatActivity() {
 
     private val surveyRepository = SurveyRepository(
-            SurveyRemoteDataSource(
-                    BuildConfig.ACCESS_TOKEN,
-                    NetworkProvider.provideSurveyService()
-            )
+            SurveyRemoteDataSource(NetworkProvider.provideSurveyService())
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
